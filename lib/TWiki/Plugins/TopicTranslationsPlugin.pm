@@ -29,10 +29,10 @@ use vars qw(
 
 use I18N::AcceptLanguage;
 
-# This should always be $Rev: 15122 $ so that TWiki can determine the checked-in
+# This should always be $Rev$ so that TWiki can determine the checked-in
 # status of the plugin. It is used by the build automation tools, so
 # you should leave it alone.
-$VERSION = '$Rev: 15122 $';
+$VERSION = '$Rev$';
 
 # This is a free-form string you can use to "name" your own plugin version.
 # It is *not* used by the build automation tools, but is reported as part
