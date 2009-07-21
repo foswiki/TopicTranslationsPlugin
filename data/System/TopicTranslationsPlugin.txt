@@ -113,8 +113,8 @@ Parameters supported:
 Displays the correct version of some text according to the language of the
 current topic. Example:
 
-=%<nop/>TRANSLATEMESSAGE{en="English" pt-br="Portugu�s"}%= display _English_
-when in the English version of a topic, and _Portugu�s_ when in the Brazilian
+=%<nop/>TRANSLATEMESSAGE{en="English" pt-br="Portugu&ecirc;s"}%= display _English_
+when in the English version of a topic, and _Portugu&ecirc;s_ when in the Brazilian
 Portuguese version.
 
 It's useful when used in conjuntcion with a view VIEW_TEMPLATE setting or some
