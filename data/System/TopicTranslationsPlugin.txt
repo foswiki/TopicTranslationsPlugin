@@ -222,7 +222,7 @@ __Note:__ You do not need to install anything on the browser to use this plugin.
 |  Plugin Author: | Foswiki:Main.AntonioTerceiro |
 |  Copyright: | Copyright &copy; 2005-2009, Foswiki:Main.AntonioTerceiro |
 |  License: | GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
-|  Version: | $Rev$ |
+|  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
 |  21 Jul 2009 | New release, porting to Foswiki. Foswiki:Tasks/Item5692 is fixed; added new TRANSLATEMESSAGE macro. |
 |  23 Sep 2006 | \
