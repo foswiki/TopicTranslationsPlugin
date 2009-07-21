@@ -224,6 +224,7 @@ __Note:__ You do not need to install anything on the browser to use this plugin.
 |  License: | GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
 |  Plugin Version: | 03 Jul 2005 (V1.003) |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  21 Jul 2009 | New release, porting to Foswiki. Foswiki:Tasks/Item5692 is fixed; added new TRANSLATEMESSAGE macro. |
 |  23 Sep 2006 | \
 New %<nop/>TRANSLATEMESSAGE{}% tag; thanks to TWiki:Main/CarlaFreitas for the idea. \
 Improvements to the plugin topic; thanks to TWiki:Main/PeterThoeny. \
