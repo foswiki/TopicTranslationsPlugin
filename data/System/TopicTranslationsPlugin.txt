@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="AntonioTerceiro" date="1128026733" format="1.0" version="1.1"}%
+%META:TOPICINFO{author="ProjectContributor" date="1128026733" format="1.0" version="1.1"}%
 ---+!! !TopicTranslationsPlugin
 
 !TopicTranslationsPlugin manages topics translations into several languages, by assigning suffixes
@@ -15,8 +15,8 @@ languages informed as acceptable by the user.
 
 Each web that is going to use !TopicTranslationsPlugin must define a variable named
 =%<nop/>TOPICTRANSLATIONS%=, which must contains a comma-delimited list of language
-code. =%<nop/>TOPICTRANSLATIONS%= can be defined TWiki-wide, which means that those
-languages will be used for the entire TWiki installation. It can also be defined
+code. =%<nop/>TOPICTRANSLATIONS%= can be defined system-wide, which means that those
+languages will be used for the entire site. It can also be defined
 per user. If none of th above is set, the plugin setting for !TopicTranslationsPlugin
 with the same name (=%<nop/>TOPICTRANSLATIONS%=) will be used as a default.
 
@@ -69,6 +69,16 @@ Parameters for =%<nop/>TRANSLATIONS{}%= :
 
 The language detected for the current topic (based on the current topic's name suffix).
 
+---+++ =%<nop/>CURRENTLANGUAGESUFFIX%=
+
+The language suffix of the current topic (empty if the current topic is in the
+default language, since the default language has not suffix). This is useful
+in menus to create links to fixed topics in the current language. Example:
+
+<verbatim>
+  <a href="%SCRIPTURL{view}%/%WEB%/SomeTopic%CURRENTLANGUAGESUFFIX%"></a>
+</verbatim>
+
 ---+++=%<nop/>DEFAULTLANGUAGE%= 
 
 The default language (i.e., the first of the listed in =%<nop/>TOPICTRANSLATIONS%=)
@@ -108,19 +118,19 @@ when in the English version of a topic, and _Portugu�s_ when in the Brazilian
 Portuguese version.
 
 It's useful when used in conjuntcion with a view VIEW_TEMPLATE setting or some
-similar way of making TWiki-editable custom layouts (like the obsolete
-TWiki:Main/FreeSkin), or even site-specific custom skins.
+similar way of making user-editable custom layouts (like the obsolete
+[[TWiki:Main/FreeSkin][FreeSkin]]), or even site-specific custom skins.
 
 %RED% __Warnings:__ %ENDCOLOR%
 
    * This tag is a workaround for sites that want to display user-written
      different translations of some text based on the current topic's language,
-     while TWiki does not provide a standard way to do that in its core (what
-     is mainly [[TWiki:Main/AntonioTerceiro][my]] fault).
+     while Foswiki does not provide a standard way to do that in its core.
    * This tag is also somewhat conflicting with core's %<nop/>MAKETEXT{}%. The
-     difference is that MAKETEXT uses TWiki-detected language and
-     TRANSLATEMESSAGE uses !TopicTranslationsPlugin-detected language, which
-     may be different in some casse.
+     difference is that MAKETEXT uses system-detected language (e.g. detected
+     from the browser, or set explicitly by the user) and TRANSLATEMESSAGE uses
+     !TopicTranslationsPlugin-detected language (detected from the topic name),
+     which may be different in some casse.
 
 ---++ Automatic Redirection
 
@@ -143,11 +153,13 @@ The automatic redirection can be disabled by setting the !TopicTranslationsPlugi
 preference flag =DISABLE_AUTOMATIC_REDIRECTION= (i.e., setting its value to something different
 from =no=, =off= and =0=).
 
-__Note:__ in TWiki:Codev/CairoRelease, to make this work you'll have to apply the
-following patch to =TWiki/Func.pm= module (got from TWiki's Subversion repository): 
+<blockquote>
+__Note:__ in older TWiki releases, such as TWiki:Codev/CairoRelease, to make
+this work you'll have to apply the following patch to =TWiki/Func.pm= module
+(got from TWiki's Subversion repository): 
 
 <verbatim>
---- /var/lib/twiki/lib/TWiki/Func.pm    2005-07-02 13:33:46.893777128 -0300
+--- /var/lib/twiki/lib/Foswiki/Func.pm    2005-07-02 13:33:46.893777128 -0300
 +++ Func.pm     2005-07-02 13:37:22.187047576 -0300
 @@ -407,8 +407,9 @@
  sub getPluginPreferencesFlag
@@ -162,6 +174,7 @@ following patch to =TWiki/Func.pm= module (got from TWiki's Subversion repositor
 
  # =========================
 </verbatim>
+</blockquote>
 
 ---++ Examples
 
@@ -192,7 +205,7 @@ Plugin settings are stored as preferences variables. To reference a plugin setti
 
 ---++ Plugin Installation Instructions
 
-__Note:__ You do not need to install anything on the browser to use this plugin. The following instructions are for the administrator who installs the plugin on the server where TWiki is running. 
+__Note:__ You do not need to install anything on the browser to use this plugin. The following instructions are for the administrator who installs the plugin on the server where Foswiki is running. 
 
    * Download the ZIP file from the Plugin web (see below)
    * Unzip ==%TOPIC%.zip== in your twiki installation directory. Content:
@@ -200,14 +213,14 @@ __Note:__ You do not need to install anything on the browser to use this plugin.
      | ==data/System/%TOPIC%.txt== | Plugin topic |
      | ==data/System/%TOPIC%.txt,v== | Plugin topic repository |
      | ==lib/Foswiki/Plugins/%TOPIC%.pm== | Plugin Perl module |
-   * (Dakar) Visit =configure= in your TWiki installation, and enable the plugin in the {Plugins} section.
+   * Visit =configure= in your Foswiki installation, and enable the plugin in the {Plugins} section.
    * Test if the installation was successful:
       * see the examples [[#Examples][above]]
 
 ---++ Plugin Info
 
-|  Plugin Author: | TWiki:Main.AntonioTerceiro |
-|  Copyright: | &copy; 2006, TWiki:Main.AntonioTerceiro |
+|  Plugin Author: | Foswiki:Main.AntonioTerceiro |
+|  Copyright: | Copyright &copy; 2005-2009, Foswiki:Main.AntonioTerceiro |
 |  License: | GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
 |  Plugin Version: | 03 Jul 2005 (V1.003) |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
@@ -219,7 +232,7 @@ Improvements to the plugin topic; thanks to TWiki:Main/PeterThoeny. \
 |  03 Jul 2005 | Version =1.003=: fixed to redirect only during =view=/=viewauth= |
 |  02 Jul 2005 | Version =1.002=: major rewrite; documented all (or almost all :)) the code; added selection of available/missing translations; added =missingformat=; added support for custom topics (and webs) in <code>%<nop/>TRANSLATIONS%</code>; added automatic redirection for the "best" translation (detection via =I18N::AcceptLanguage=).  |
 |  19 Jun 2005: | Initial version: =1.001= |
-|  TWiki Dependency: | $TWiki::Plugins::VERSION 1.024 |
+|  Foswiki Dependency: | $Foswiki::Plugins::VERSION 1.024 |
 |  CPAN Dependencies: | =I18N::AcceptLanguage= |
 |  Other Dependencies: | none |
 |  Perl Version: | 5.005 |
@@ -228,5 +241,5 @@ Improvements to the plugin topic; thanks to TWiki:Main/PeterThoeny. \
 
 __Related Topics:__ %SYSTEMWEB%.DefaultPreferences, %USERSWEB%.SitePreferences, [[%SYSTEMWEB%.Plugins][Plugins]]
 
--- TWiki:Main.AntonioTerceiro - 03 Jul 2005
+-- Foswiki:Main.AntonioTerceiro - 21 Jul 2009
 
