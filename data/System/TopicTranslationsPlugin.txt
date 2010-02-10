@@ -224,6 +224,7 @@ __Note:__ You do not need to install anything on the browser to use this plugin.
 |  License: | GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  09 Feb 2009 | New release. Fixed redirection when coming from a topic in the same language as the current one. |
 |  21 Jul 2009 | New release, porting to Foswiki. Foswiki:Tasks/Item5692 is fixed; added new TRANSLATEMESSAGE macro. |
 |  23 Sep 2006 | \
 New %<nop/>TRANSLATEMESSAGE{}% tag; thanks to TWiki:Main/CarlaFreitas for the idea. \
