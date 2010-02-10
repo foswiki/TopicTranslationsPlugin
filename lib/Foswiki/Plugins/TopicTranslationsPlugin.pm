@@ -133,13 +133,14 @@ sub findBaseTopicName {
     return $base;
 }
 
-# finds the language that must be used for anything within the current topic,
-# based on its suffix
+# finds the language of the current topic (or of the topic passed in as
+# argument), based on its suffix
 sub currentLanguage {
+    my $theTopic = shift || $topic;
     my $norm;
     foreach $lang (@translations) {
         $norm = normalizeLanguageName($lang);
-        if ($topic =~ m/$norm$/) {
+        if ($theTopic =~ m/$norm$/) {
             return $lang;
         }
     }
@@ -283,13 +284,21 @@ sub checkRedirection {
         my $baseUrl = Foswiki::Func::getViewUrl($web, $baseTopicName);
         my $editUrl = Foswiki::Func::getScriptUrl($web, $baseTopicName, 'edit');
         my $origin = $query->referer() || '';
+        my $originLanguage = currentLanguage($origin);
+
+        my $current = currentLanguage();
+
+        # don't redirect if we came from another topic in the same language as
+        # the current one.
+        if ($origin && $originLanguage eq $current) {
+          return;
+        }
         
         # we don't want to redirect if the user came from another translation of
         # this same topic, or from an edit
         if ( (!($origin =~ /^$baseUrl/)) and (!($origin =~ /^$editUrl/))) {
 
             # check where we are:
-            my $current = currentLanguage();
             my $best = findBestTranslation(); # for the current topic, indeed
 
             # we don't need to redirect if we are already in the best translation:
