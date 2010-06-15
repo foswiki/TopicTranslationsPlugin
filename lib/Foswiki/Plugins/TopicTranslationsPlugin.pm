@@ -37,7 +37,7 @@ $VERSION = '$Rev$';
 # This is a free-form string you can use to "name" your own plugin version.
 # It is *not* used by the build automation tools, but is reported as part
 # of the version number in PLUGINDESCRIPTIONS.
-$RELEASE = 'Foswiki';
+$RELEASE = '1.0';
 
 $pluginName = 'TopicTranslationsPlugin';  # Name of this Plugin
 
@@ -57,6 +57,7 @@ sub initPlugin {
     # those should be preferably set in a per web basis. Defaults to the
     # corresponding plugin setting (or "en" if someone messes with it)
     my $trans = Foswiki::Func::getPreferencesValue("TOPICTRANSLATIONS") || Foswiki::Func::getPluginPreferencesValue("TOPICTRANSLATIONS") || "en";
+    chomp $trans;
     @translations = split(/,\s*/,$trans);
     $redirectMethod = Foswiki::Func::getPreferencesValue("REDIRECTMETHOD") || Foswiki::Func::getPluginPreferencesValue("REDIRECTMETHOD") || "http";
     $userLanguage = Foswiki::Func::getPreferencesValue("LANGUAGE") || "en";    
