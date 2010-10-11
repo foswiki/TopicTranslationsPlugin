@@ -17,7 +17,7 @@ Each web that is going to use !TopicTranslationsPlugin must define a variable na
 =%<nop/>TOPICTRANSLATIONS%=, which must contains a comma-delimited list of language
 code. =%<nop/>TOPICTRANSLATIONS%= can be defined system-wide, which means that those
 languages will be used for the entire site. It can also be defined
-per user. If none of th above is set, the plugin setting for !TopicTranslationsPlugin
+per user. If none of the above is set, the plugin setting for !TopicTranslationsPlugin
 with the same name (=%<nop/>TOPICTRANSLATIONS%=) will be used as a default.
 
 For example:
@@ -117,18 +117,18 @@ current topic. Example:
 when in the English version of a topic, and _Portugu&ecirc;s_ when in the Brazilian
 Portuguese version.
 
-It's useful when used in conjuntcion with a view VIEW_TEMPLATE setting or some
+It's useful when used in conjunction with a view =VIEW_TEMPLATE= setting or some
 similar way of making user-editable custom layouts (like the obsolete
-[[TWiki:Main/FreeSkin][FreeSkin]]), or even site-specific custom skins.
+[[TWiki:Plugins/FreeSkin][FreeSkin]]), or even site-specific custom skins.
 
 %RED% __Warnings:__ %ENDCOLOR%
 
    * This tag is a workaround for sites that want to display user-written
      different translations of some text based on the current topic's language,
      while Foswiki does not provide a standard way to do that in its core.
-   * This tag is also somewhat conflicting with core's %<nop/>MAKETEXT{}%. The
-     difference is that MAKETEXT uses system-detected language (e.g. detected
-     from the browser, or set explicitly by the user) and TRANSLATEMESSAGE uses
+   * This tag is also somewhat conflicting with core's =%<nop/>MAKETEXT{}%=. The
+     difference is that =MAKETEXT= uses the system-detected language (e.g. detected
+     from the browser, or set explicitly by the user) and =TRANSLATEMESSAGE= uses
      !TopicTranslationsPlugin-detected language (detected from the topic name),
      which may be different in some casse.
 
@@ -142,7 +142,7 @@ installed, this will happen by default.
       * if =REDIRECTMETHOD= is =http=, then the =Accept-Language= header sent by the user agent (the browser, most of the times) is used by =I18N::AcceptLanguage= Perl module to detect the language.
       * if =REDIRECTMETHOD= is =user=, then the "LANGUAGE" user preference is used as the preferred language.
    * The user *won't* be redirected:
-      * during an action other than =view= and =viewauth= (off course)
+      * during an action other than =view= and =viewauth= (of course)
       * if the user came from a link in another translation of the same topic.
       * if the user came from an =edit= script.
       * __Note:__ the two later cases are detected by the =Referer= header sent by the user agent.
@@ -152,29 +152,6 @@ installed, this will happen by default.
 The automatic redirection can be disabled by setting the !TopicTranslationsPlugin's
 preference flag =DISABLE_AUTOMATIC_REDIRECTION= (i.e., setting its value to something different
 from =no=, =off= and =0=).
-
-<blockquote>
-__Note:__ in older TWiki releases, such as TWiki:Codev/CairoRelease, to make
-this work you'll have to apply the following patch to =TWiki/Func.pm= module
-(got from TWiki's Subversion repository): 
-
-<verbatim>
---- /var/lib/twiki/lib/Foswiki/Func.pm    2005-07-02 13:33:46.893777128 -0300
-+++ Func.pm     2005-07-02 13:37:22.187047576 -0300
-@@ -407,8 +407,9 @@
- sub getPluginPreferencesFlag
- {
-     my( $theKey ) = @_;
--    my $value = getPluginPreferencesValue( $theKey );
--    return TWiki::Prefs::formatAsFlag($value);
-+    my $package = caller;
-+    $package =~ s/.*:://; # strip off TWiki::Plugins:: prefix
-+    return TWiki::Prefs::getPreferencesFlag( "\U$package\E_$theKey" );
- }
-
- # =========================
-</verbatim>
-</blockquote>
 
 ---++ Examples
 
@@ -208,22 +185,21 @@ Plugin settings are stored as preferences variables. To reference a plugin setti
 __Note:__ You do not need to install anything on the browser to use this plugin. The following instructions are for the administrator who installs the plugin on the server where Foswiki is running. 
 
    * Download the ZIP file from the Plugin web (see below)
-   * Unzip ==%TOPIC%.zip== in your twiki installation directory. Content:
-     | *File:* | *Description:* |
-     | ==data/System/%TOPIC%.txt== | Plugin topic |
-     | ==data/System/%TOPIC%.txt,v== | Plugin topic repository |
-     | ==lib/Foswiki/Plugins/%TOPIC%.pm== | Plugin Perl module |
-   * Visit =configure= in your Foswiki installation, and enable the plugin in the {Plugins} section.
+   * Unzip ==%TOPIC%.zip== in your Foswiki installation directory. Content:
+%$MANIFEST%
+   * Visit =configure= in your Foswiki installation, and enable the plugin in the ={Plugins}= section.
    * Test if the installation was successful:
       * see the examples [[#Examples][above]]
 
 ---++ Plugin Info
 
 |  Plugin Author: | Foswiki:Main.AntonioTerceiro |
-|  Copyright: | Copyright &copy; 2005-2009, Foswiki:Main.AntonioTerceiro |
+|  Copyright: | Copyright &copy; 2005-2010, Foswiki:Main.AntonioTerceiro |
 |  License: | GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
+|  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  10 Oct 2010 | Documentation editing.  -- Foswiki:Main.WillNorris |
 |  15 Jun 2010 | (1.0) New release. Fixed Foswiki:Tasks/Item9162 and Foswiki:Tasks/Item8653 |
 |  09 Feb 2009 | New release. Fixed redirection when coming from a topic in the same language as the current one. |
 |  21 Jul 2009 | New release, porting to Foswiki. Foswiki:Tasks/Item5692 is fixed; added new TRANSLATEMESSAGE macro. |
@@ -235,14 +211,13 @@ Improvements to the plugin topic; thanks to TWiki:Main/PeterThoeny. \
 |  03 Jul 2005 | Version =1.003=: fixed to redirect only during =view=/=viewauth= |
 |  02 Jul 2005 | Version =1.002=: major rewrite; documented all (or almost all :)) the code; added selection of available/missing translations; added =missingformat=; added support for custom topics (and webs) in <code>%<nop/>TRANSLATIONS%</code>; added automatic redirection for the "best" translation (detection via =I18N::AcceptLanguage=).  |
 |  19 Jun 2005: | Initial version: =1.001= |
-|  Foswiki Dependency: | $Foswiki::Plugins::VERSION 1.024 |
-|  CPAN Dependencies: | =I18N::AcceptLanguage= |
+|  Foswiki Dependency: | $Foswiki::Plugins::VERSION>=2.0 |
+|  CPAN Dependencies: | CPAN:I18N::AcceptLanguage |
 |  Other Dependencies: | none |
 |  Perl Version: | 5.005 |
-|  Plugin Home: | http://foswiki.org/Extensions/%TOPIC% |
-|  Feedback: | http://foswiki.org/Extensions/%TOPIC%Dev |
+|  Home: | http://foswiki.org/Extensions/%TOPIC% |
+|  Support: | http://foswiki.org/Support/%TOPIC% |
 
 __Related Topics:__ %SYSTEMWEB%.DefaultPreferences, %USERSWEB%.SitePreferences, [[%SYSTEMWEB%.Plugins][Plugins]]
 
 -- Foswiki:Main.AntonioTerceiro - 21 Jul 2009
-
