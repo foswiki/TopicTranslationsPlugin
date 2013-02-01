@@ -1,5 +1,5 @@
 %META:TOPICINFO{author="ProjectContributor" date="1128026733" format="1.0" version="1.1"}%
----+!! !TopicTranslationsPlugin
+---+!! %TOPIC%
 
 !TopicTranslationsPlugin manages topics translations into several languages, by assigning suffixes
 to topic names corresponding to known languages. !TopicTranslationsPlugin also automatically
@@ -9,16 +9,14 @@ languages informed as acceptable by the user.
 
 %TOC%
 
-------
-
 ---++ Syntax Rules
 
 Each web that is going to use !TopicTranslationsPlugin must define a variable named
-=%<nop/>TOPICTRANSLATIONS%=, which must contains a comma-delimited list of language
-code. =%<nop/>TOPICTRANSLATIONS%= can be defined system-wide, which means that those
+=%<nop>TOPICTRANSLATIONS%=, which must contains a comma-delimited list of language
+code. =%<nop>TOPICTRANSLATIONS%= can be defined system-wide, which means that those
 languages will be used for the entire site. It can also be defined
 per user. If none of the above is set, the plugin setting for !TopicTranslationsPlugin
-with the same name (=%<nop/>TOPICTRANSLATIONS%=) will be used as a default.
+with the same name (=%<nop>TOPICTRANSLATIONS%=) will be used as a default.
 
 For example:
 
@@ -26,23 +24,23 @@ For example:
 
 !TopicTranslationsPlugin will then use suffixes in the topic names to "recognize"
 each topic's translations. In the example above, the translations for, say,
-=<nop/>SomeTopic=, will be the following:
+=<nop>SomeTopic=, will be the following:
 
-   * =<nop/>SomeTopic= will be the original version (assumed to be written in =pt-br=)
-   * =<nop/>SomeTopicEn= will be the 1<sup>st</sup> translation (in =en=)
-   * =<nop/>SomeTopicFr= will be the 2<sup>nd</sup> translation (in =fr=)  
+   * =<nop>SomeTopic= will be the original version (assumed to be written in =pt-br=)
+   * =<nop>SomeTopicEn= will be the 1<sup>st</sup> translation (in =en=)
+   * =<nop>SomeTopicFr= will be the 2<sup>nd</sup> translation (in =fr=)  
 
-__Important:__ we'll assume that the first language listed in =%<nop/>TOPICTRANSLATIONS%=
+__Important:__ we'll assume that the first language listed in =%<nop>TOPICTRANSLATIONS%=
 is the default one. Thus, the topics with no language suffixes are assumed to be written in
 that language.
 
 Follows the plugin's available tags, along with examples of their usage.
 
----+++ =%<nop/>TRANSLATIONS{}%= 
+---+++ =%<nop>TRANSLATIONS{}%= 
 
 List a topic's translations, even if they don't exist yet (so we can create them!)
 
-Parameters for =%<nop/>TRANSLATIONS{}%= :
+Parameters for =%<nop>TRANSLATIONS{}%= :
 
    * <code>"MyTopic"</code> or <code>topic="MyTopic"</code>: indicates the topic that must
      have translations listed. Can be ="MyTopic"= or ="Web.MyTopic"=.
@@ -54,7 +52,7 @@ Parameters for =%<nop/>TRANSLATIONS{}%= :
      | =$topic= | The topic whose translations we are listing. |
      | =$translation= | the topic corresponding to the current translation. |
      | =$web= | the web containing the translations |
-     Defaults to ="[[$web.$translation]<nop/>[$language]]"=
+     Defaults to ="[[$web.$translation]<nop>[$language]]"=
    * =missingformat=: like =format=, but used for translations that were not written yet.
      Supports the same variables as =format= and defaults to the same value of =format=.
    * <code>separator="..."</code> : text that will separate the items in the listing.
@@ -65,11 +63,11 @@ Parameters for =%<nop/>TRANSLATIONS{}%= :
      | =all= | lists all the translations |
      The default value is ="all"=.
 
----+++ =%<nop/>CURRENTLANGUAGE%=
+---+++ =%<nop>CURRENTLANGUAGE%=
 
 The language detected for the current topic (based on the current topic's name suffix).
 
----+++ =%<nop/>CURRENTLANGUAGESUFFIX%=
+---+++ =%<nop>CURRENTLANGUAGESUFFIX%=
 
 The language suffix of the current topic (empty if the current topic is in the
 default language, since the default language has not suffix). This is useful
@@ -79,54 +77,53 @@ in menus to create links to fixed topics in the current language. Example:
   <a href="%SCRIPTURL{view}%/%WEB%/SomeTopic%CURRENTLANGUAGESUFFIX%"></a>
 </verbatim>
 
----+++=%<nop/>DEFAULTLANGUAGE%= 
+---+++=%<nop>DEFAULTLANGUAGE%= 
 
-The default language (i.e., the first of the listed in =%<nop/>TOPICTRANSLATIONS%=)
+The default language (i.e., the first of the listed in =%<nop>TOPICTRANSLATIONS%=)
 
----+++ =%<nop/>INCLUDETRANSLATION{<nop/>SomeTopic}%=
+---+++ =%<nop>INCLUDETRANSLATION{<nop>SomeTopic}%=
 
-Includes the translation of =<nop/>SomeTopic= that is in the same language as the current topic
+Includes the translation of =<nop>SomeTopic= that is in the same language as the current topic
 (as detected based on current topic's name suffix)
 
-Parameters for =%<nop/>INCLUDETRANSLATION{}%= :
+Parameters for =%<nop>INCLUDETRANSLATION{}%= :
 
-   * ="<nop/>MyTopic"= : include the suitable =<nop/>MyTopic= translation. Can be
-     ="<nop/>MyTopic"= or ="<nop/>Web.MyTopic"=.
+   * ="<nop>MyTopic"= : include the suitable =<nop>MyTopic= translation. Can be
+     ="<nop>MyTopic"= or ="<nop>Web.MyTopic"=.
    * <code>rev="1.2"</code> : include the topic's revision =1.2= (for example).
      Defaults to the current revision.
 
 The initial motivation for this tag is to include a suitable menu, for example, based on
 current topic's language. But there are several other possibilities.
 
----+++ =%<nop/>BASETRANSLATION{...}%=
+---+++ =%<nop>BASETRANSLATION{...}%=
 
 Expands to the name of the original topic (the one we are translating), i.e. the name of
 current topic without any language suffix.
 
 Parameters supported:
 
-   * <code>topic="<nop/>MyTopic"</code>: find base translation for <code>MyTopic</code> instead of
+   * <code>topic="<nop>MyTopic"</code>: find base translation for <code>MyTopic</code> instead of
      current topic.
 
----+++ =%<nop/>TRANSLATEMESSAGE{...}%=
+---+++ =%<nop>TRANSLATEMESSAGE{...}%=
 
 Displays the correct version of some text according to the language of the
 current topic. Example:
 
-=%<nop/>TRANSLATEMESSAGE{en="English" pt-br="Portugu&ecirc;s"}%= display _English_
+=%<nop>TRANSLATEMESSAGE{en="English" pt-br="Portugu&ecirc;s"}%= display _English_
 when in the English version of a topic, and _Portugu&ecirc;s_ when in the Brazilian
 Portuguese version.
 
 It's useful when used in conjunction with a view =VIEW_TEMPLATE= setting or some
-similar way of making user-editable custom layouts (like the obsolete
-[[TWiki:Plugins/FreeSkin][FreeSkin]]), or even site-specific custom skins.
+similar way of making user-editable custom layouts like custom skins.
 
 %RED% __Warnings:__ %ENDCOLOR%
 
    * This tag is a workaround for sites that want to display user-written
      different translations of some text based on the current topic's language,
      while Foswiki does not provide a standard way to do that in its core.
-   * This tag is also somewhat conflicting with core's =%<nop/>MAKETEXT{}%=. The
+   * This tag is also somewhat conflicting with core's =%<nop>MAKETEXT{}%=. The
      difference is that =MAKETEXT= uses the system-detected language (e.g. detected
      from the browser, or set explicitly by the user) and =TRANSLATEMESSAGE= uses
      !TopicTranslationsPlugin-detected language (detected from the topic name),
@@ -156,20 +153,14 @@ from =no=, =off= and =0=).
 ---++ Examples
 
 | *Test* | *Actual test(work if the plugin is installed)* |
-| %<nop/>TRANSLATIONS% | %TRANSLATIONS% |
-| %<nop/>TRANSLATIONS{format="[[$translation]<nop/>[$language translation]]" separator=", "}% | %TRANSLATIONS{format="[[$translation][$language translation]]" separator=", "}% |
-| %<nop/>CURRENTLANGUAGE% | %CURRENTLANGUAGE% |
-| %<nop/>DEFAULTLANGUAGE% | %DEFAULTLANGUAGE% |
+| %<nop>TRANSLATIONS% | %TRANSLATIONS% |
+| %<nop>TRANSLATIONS{format="[[$translation]<nop>[$language translation]]" separator=", "}% | %TRANSLATIONS{format="[[$translation][$language translation]]" separator=", "}% |
+| %<nop>CURRENTLANGUAGE% | %CURRENTLANGUAGE% |
+| %<nop>DEFAULTLANGUAGE% | %DEFAULTLANGUAGE% |
 
----++ Plugin Settings
+---++ Preference Settings
 
-Plugin settings are stored as preferences variables. To reference a plugin setting write ==%<nop>&lt;plugin&gt;_&lt;setting&gt;%==, i.e. ==%<nop>INTERWIKIPLUGIN_SHORTDESCRIPTION%==
-
-   * One line description, is shown in the %SYSTEMWEB%.TextFormattingRules topic:
-      * Set SHORTDESCRIPTION = Manages a topic's translations into several languages. 
-
-   * Debug plugin: (See output in =data/debug.txt=)
-      * Set DEBUG = 0
+The following settings may be used in your !WebPreferences or !SitePreferences.
 
    * Whether automatic redirection must be disabled or not. Set to =yes= to disable.
       * Set DISABLE_AUTOMATIC_REDIRECTION = no
@@ -180,44 +171,39 @@ Plugin settings are stored as preferences variables. To reference a plugin setti
    * Method used for detect language when redirecting (See "Automatic Redirection" above):
       * Set REDIRECTMETHOD = http
 
----++ Plugin Installation Instructions
+---++ Installation Instructions
+%$INSTALL_INSTRUCTIONS%
 
-__Note:__ You do not need to install anything on the browser to use this plugin. The following instructions are for the administrator who installs the plugin on the server where Foswiki is running. 
+---++ Info
+<!--
+   * Set SHORTDESCRIPTION = Manages a topic's translations into several languages. 
+-->
 
-   * Download the ZIP file from the Plugin web (see below)
-   * Unzip ==%TOPIC%.zip== in your Foswiki installation directory. Content:
-%$MANIFEST%
-   * Visit =configure= in your Foswiki installation, and enable the plugin in the ={Plugins}= section.
-   * Test if the installation was successful:
-      * see the examples [[#Examples][above]]
-
----++ Plugin Info
-
-|  Plugin Author: | Foswiki:Main.AntonioTerceiro |
+|  Author: | Foswiki:Main.AntonioTerceiro |
 |  Copyright: | Copyright &copy; 2005-2010, Foswiki:Main.AntonioTerceiro |
 |  License: | GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
 |  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  01 Feb 2013 | modernized and fixed plugin: added use strict; use warnings and fixed several non-declared variables; \
+                 using proper macro registration instead of commonTagsHandler; \
+                 fixed DEFAULTLANGUAGE not working properly; \
+                 cut down a few global variables; \
+                 removed feature to specify preference variables in plugin topic; \
+                 lazy-load I18N::AcceptLanguage for better performance; \
+                 fixed plugin redirecting when using short urls and/or lighttpd; \
+                 fixed inconsistencies while processing params (i.e. the topic one), and make better use core of apis; \
+                 don't issue a redirect when calling foswiki from the command line |
 |  10 Oct 2010 | Documentation editing.  -- Foswiki:Main.WillNorris |
 |  15 Jun 2010 | (1.0) New release. Fixed Foswiki:Tasks/Item9162 and Foswiki:Tasks/Item8653 |
 |  09 Feb 2009 | New release. Fixed redirection when coming from a topic in the same language as the current one. |
 |  21 Jul 2009 | New release, porting to Foswiki. Foswiki:Tasks/Item5692 is fixed; added new TRANSLATEMESSAGE macro. |
-|  23 Sep 2006 | \
-New %<nop/>TRANSLATEMESSAGE{}% tag; thanks to TWiki:Main/CarlaFreitas for the idea. \
-Improvements to the plugin topic; thanks to TWiki:Main/PeterThoeny. \
-|
-|  04 Sep 2006 | new version released. Added patch from TWiki:Main/BeomsuChang for flexible language detection; thanks for TWiki:Main/JoenioCosta for remembering me I should release a new version. |
-|  03 Jul 2005 | Version =1.003=: fixed to redirect only during =view=/=viewauth= |
-|  02 Jul 2005 | Version =1.002=: major rewrite; documented all (or almost all :)) the code; added selection of available/missing translations; added =missingformat=; added support for custom topics (and webs) in <code>%<nop/>TRANSLATIONS%</code>; added automatic redirection for the "best" translation (detection via =I18N::AcceptLanguage=).  |
-|  19 Jun 2005: | Initial version: =1.001= |
-|  Foswiki Dependency: | $Foswiki::Plugins::VERSION>=2.0 |
-|  CPAN Dependencies: | CPAN:I18N::AcceptLanguage |
-|  Other Dependencies: | none |
-|  Perl Version: | 5.005 |
-|  Home: | http://foswiki.org/Extensions/%TOPIC% |
-|  Support: | http://foswiki.org/Support/%TOPIC% |
-
-__Related Topics:__ %SYSTEMWEB%.DefaultPreferences, %USERSWEB%.SitePreferences, [[%SYSTEMWEB%.Plugins][Plugins]]
-
--- Foswiki:Main.AntonioTerceiro - 21 Jul 2009
+|  23 Sep 2006 | New %<nop>TRANSLATEMESSAGE{}% tag; thanks to Carla Freitas for the idea. \
+                 Improvements to the plugin topic; thanks to Peter Thoeny. |
+|  04 Sep 2006 | new version released. Added patch from Beomsu Chang for flexible language detection; thanks for Foswiki:Main/JoenioCosta for remembering me I should release a new version. |
+|  03 Jul 2005 | (1.003) fixed to redirect only during =view=/=viewauth= |
+|  02 Jul 2005 | (1.002) major rewrite; documented all (or almost all :)) the code; added selection of available/missing translations; added =missingformat=; added support for custom topics (and webs) in <code>%<nop>TRANSLATIONS%</code>; added automatic redirection for the "best" translation (detection via =I18N::AcceptLanguage=).  |
+|  19 Jun 2005: | (1.001) Initial version |
+|  Dependencies: | %$DEPENDENCIES% |
+|  Home page: | Foswiki:Extensions/%TOPIC% |
+|  Support: | Foswiki:Support/%TOPIC% |

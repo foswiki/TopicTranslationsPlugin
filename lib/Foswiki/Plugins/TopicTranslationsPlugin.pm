@@ -16,95 +16,56 @@
 # =========================
 package Foswiki::Plugins::TopicTranslationsPlugin;
 
-# =========================
-use vars qw(
-    $web $topic $user $installWeb $VERSION $RELEASE $pluginName
-    $debug
-    @translations
-    $defaultLanguage
-    $redirectMethod
-    $userLanguage
-    $acceptor
-);
+use strict;
+use warnings;
 
-use I18N::AcceptLanguage;
+use Foswiki::Func ();
 
-# This should always be $Rev$ so that Foswiki can determine the checked-in
-# status of the plugin. It is used by the build automation tools, so
-# you should leave it alone.
-$VERSION = '$Rev$';
+use constant DEBUG => 0; # toggle me
 
-# This is a free-form string you can use to "name" your own plugin version.
-# It is *not* used by the build automation tools, but is reported as part
-# of the version number in PLUGINDESCRIPTIONS.
-$RELEASE = '1.0.1';
+our @translations;
+our $defaultLanguage;
+our %normalizedTranslations;
+our $baseWeb;
+our $baseTopic;
+our $acceptor;
 
-$pluginName = 'TopicTranslationsPlugin';  # Name of this Plugin
+our $VERSION = '2.00';
+our $RELEASE = '2.00';
+
+our $NO_PREFS_IN_TOPIC = 1;
 
 # =========================
 sub initPlugin {
-    ( $topic, $web, $user, $installWeb ) = @_;
+    ( $baseTopic, $baseWeb) = @_;
 
     # check for Plugins.pm versions
     if( $Foswiki::Plugins::VERSION < 1.024 ) {
-        Foswiki::Func::writeWarning( "Version mismatch between $pluginName and Plugins.pm" );
+        Foswiki::Func::writeWarning( "Version mismatch between TopicTranslationsPlugin and Plugins.pm" );
         return 0;
     }
 
-    # Get plugin debug flag
-    $debug = Foswiki::Func::getPluginPreferencesFlag( "DEBUG" );
-
     # those should be preferably set in a per web basis. Defaults to the
     # corresponding plugin setting (or "en" if someone messes with it)
-    my $trans = Foswiki::Func::getPreferencesValue("TOPICTRANSLATIONS") || Foswiki::Func::getPluginPreferencesValue("TOPICTRANSLATIONS") || "en";
+    my $trans = Foswiki::Func::getPreferencesValue("TOPICTRANSLATIONS") || "en";
     chomp $trans;
-    @translations = split(/,\s*/,$trans);
-    $redirectMethod = Foswiki::Func::getPreferencesValue("REDIRECTMETHOD") || Foswiki::Func::getPluginPreferencesValue("REDIRECTMETHOD") || "http";
-    $userLanguage = Foswiki::Func::getPreferencesValue("LANGUAGE") || "en";    
-
-    # first listed language is the default one:
+    @translations = split(/\s*,\s*/,$trans);
+    normalizeLanguageName($_) foreach @translations;
     $defaultLanguage = $translations[0];
 
-    # create a language acceptor for later use:
-    if($redirectMethod eq "http") {
-        $acceptor = I18N::AcceptLanguage->new (
-            strict => 0,
-            defaultLanguage => $defaultLanguage
-        );
-    }
-
     # must I redirect to the best available translation?
-    my $mustRedirect = (! Foswiki::Func::getPluginPreferencesFlag("DISABLE_AUTOMATIC_REDIRECTION"));
-    checkRedirection() if $mustRedirect;
+    checkRedirection() unless 
+      Foswiki::Func::isTrue(Foswiki::Func::getPreferencesFlag("DISABLE_AUTOMATIC_REDIRECTION"));
 
-    # Plugin correctly initialized
-    Foswiki::Func::writeDebug( "- Foswiki::Plugins::${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
+    Foswiki::Func::registerTagHandler('INCLUDETRANSLATION', \&handleIncludeTranslation);
+    Foswiki::Func::registerTagHandler('BASETRANSLATION', \&handleBaseTranslation);
+    Foswiki::Func::registerTagHandler('TRANSLATIONS', \&handleTranslations);
+    Foswiki::Func::registerTagHandler('TRANSLATEMESSAGE', sub { return $_[1]->{currentLanguage()}; });
+    Foswiki::Func::registerTagHandler('DEFAULTLANGUAGE', sub { return $defaultLanguage; });
+    Foswiki::Func::registerTagHandler('CURRENTLANGUAGE', sub { return currentLanguage(); });
+    Foswiki::Func::registerTagHandler('CURRENTLANGUAGESUFFIX', sub { return currentLanguageSuffix(); });
+
     return 1;
-}
-
-# =========================
-sub beforeCommonTagsHandler {
-### my ( $text, $topic, $web ) = @_;   # do not uncomment, use $_[0], $_[1]... instead
-
-    Foswiki::Func::writeDebug( "- ${pluginName}::beforeCommonTagsHandler( $_[2].$_[1] )" ) if $debug;
-
-    # handle all INCLUDETRANSLATION tags:
-    $_[0] =~ s/%INCLUDETRANSLATION{(.*?)}%/&handleIncludeTranslation($1)/ge;
-}
-
-# =========================
-sub commonTagsHandler {
-### my ( $text, $topic, $web ) = @_;   # do not uncomment, use $_[0], $_[1]... instead
-
-    Foswiki::Func::writeDebug( "- ${pluginName}::commonTagsHandler( $_[2].$_[1] )" ) if $debug;
-
-    # handle our common tags:
-    $_[0] =~ s/%TRANSLATIONS({(.*?)})?%/&handleTranslations($2)/ge;
-    $_[0] =~ s/%CURRENTLANGUAGE%/&currentLanguage/ge;
-    $_[0] =~ s/%CURRENTLANGUAGESUFFIX%/&currentLanguageSuffix/ge;
-    $_[0] =~ s/%DEFAULTLANGUAGE%/$defaultLanguage/ge;
-    $_[0] =~ s/%BASETRANSLATION({(.*?)})?%/&handleBaseTranslation($2)/ge;
-    $_[0] =~ s/%TRANSLATEMESSAGE({(.*?)})?%/&handleTranslateMessage($2)/ge;
 }
 
 # transform a language code into a suitable suffix for topics, by capitalizing
@@ -115,36 +76,42 @@ sub commonTagsHandler {
 #   EN-US -> Enus     pt -> Pt
 sub normalizeLanguageName {
     my $lang = shift;
-    $lang =~ s/[_-]//g;
-    $lang =~ s/^(.)(.*)$/\u$1\L$2/;
-    return $lang;
+
+    my $norm = $normalizedTranslations{$lang};
+
+    unless (defined $norm) {
+      $norm = $lang;
+      $norm =~ s/[_-]//g;
+      $norm =~ s/^(.)(.*)$/\u$1\L$2/;
+      $normalizedTranslations{$lang} = $norm;
+    }
+
+    return $norm;
 }
 
 # finds the base topic name, i.e., the topic name without any language suffix.
-# If no topic is passed as argument, uses $topic (the topic from which the
+# If no topic is passed as argument, uses $baseTopic (the topic from which the
 # plugin is being called).
 sub findBaseTopicName {
-    my $base = shift || $topic;
-    foreach $lang (@translations) {
-        $norm = normalizeLanguageName($lang);
-        if ($base =~ m/$norm$/) {
-            $base =~ s/$norm$//;
-        }
+    my $base = shift || $baseTopic;
+
+    foreach my $lang (values %normalizedTranslations) {
+        last if $base =~ s/$lang$//;
     }
+
     return $base;
 }
 
 # finds the language of the current topic (or of the topic passed in as
 # argument), based on its suffix
 sub currentLanguage {
-    my $theTopic = shift || $topic;
-    my $norm;
-    foreach $lang (@translations) {
-        $norm = normalizeLanguageName($lang);
-        if ($theTopic =~ m/$norm$/) {
-            return $lang;
-        }
+    my $theTopic = shift || $baseTopic;
+
+    foreach my $lang (keys %normalizedTranslations) {
+        my $norm = $normalizedTranslations{$lang};
+        return $lang if $theTopic =~ m/$norm$/;
     }
+
     return $defaultLanguage;
 }
 
@@ -159,33 +126,21 @@ sub currentLanguageSuffix {
 # argument). Depending on the arguments to the %TRANSLATIONS% tag, many options
 # can apply.
 sub handleTranslations {
-    my $params = shift;
-
-    my $result = "";
-    my $separator = "";
-    my $norm;
+    my ($session, $params, $topic, $web) = @_;
 
     # format for the items:
-    my $format = Foswiki::Func::extractNameValuePair($params, "format") || "[[\$web.\$translation][\$language]]";
-    my $missingFormat = Foswiki::Func::extractNameValuePair($params, "missingformat") || $format;
+    my $format = $params->{format} || "[[\$web.\$translation][\$language]]";
+    my $missingFormat = $params->{missingformat} || $format;
     
     # other stuff:
-    my $userSeparator = Foswiki::Func::extractNameValuePair($params, "separator") || " ";
+    my $theSep = $params->{separator};
+    $theSep = ", " unless defined $theSep;
 
-    # 
-    my $theTopic = Foswiki::Func::extractNameValuePair($params) || Foswiki::Func::extractNameValuePair($params,"topic") || $topic;
-    my $theWeb;
-    if ($theTopic =~ m/^([^.]+)\.([^.]+)/) {
-        # topic="Web.MyTopic"
-        $theWeb = $1;
-        $theTopic = $2;
-    } else {
-        $theWeb = $web;
-    }
+    my ($theWeb, $theTopic) = Foswiki::Func::normalizeWebTopicName($web, $params->{_DEFAULT} || $params->{topic} || $topic);
     my $baseTopicName = findBaseTopicName($theTopic);
 
     # find out which translations we must list:
-    my $which = Foswiki::Func::extractNameValuePair($params, "which") || "all";
+    my $which = $params->{which} || "all";
     my @whichTranslations;
     if ($which eq "available") {
         @whichTranslations = findAvailableTranslations($theTopic);
@@ -196,14 +151,13 @@ sub handleTranslations {
     }
  
     # list translations
-    foreach $lang (@whichTranslations) {
-        $norm = ($lang eq $defaultLanguage)?'':normalizeLanguageName($lang);
-        $result .= $separator;
-        $separator = $userSeparator;
-        $result .= formatTranslationEntry($baseTopicName, $theWeb, $baseTopicName . $norm, $lang, $format, $missingFormat);
+    my @result = ();
+    foreach my $lang (@whichTranslations) {
+        my $norm = ($lang eq $defaultLanguage)?'':normalizeLanguageName($lang);
+        push @result, formatTranslationEntry($baseTopicName, $theWeb, $baseTopicName . $norm, $lang, $format, $missingFormat);
     }
 
-    return $result;
+    return join($theSep, @result);
 }
 
 # shows the item using the given format
@@ -211,7 +165,7 @@ sub formatTranslationEntry {
     my ($theTopic, $theWeb, $translationTopic, $lang, $format, $missingFormat) = @_;
 
     # wheter to use the format for available translations or for missing ones:
-    my $result = (Foswiki::Func::topicExists($web, $translationTopic))?($format):($missingFormat);
+    my $result = (Foswiki::Func::topicExists($baseWeb, $translationTopic))?($format):($missingFormat);
 
     # substitute the variables:
     $result =~ s/\$web/$theWeb/g;
@@ -225,27 +179,18 @@ sub formatTranslationEntry {
 # include the translation of the given topic that corresponds to our current
 # language
 sub handleIncludeTranslation {
-    my $params = shift;
+    my ($session, $params, $topic, $web) = @_;
+
+    my ($theWeb, $theTopic) = Foswiki::Func::normalizeWebTopicName($web, $params->{_DEFAULT} || $params->{topic} || $topic);
+    $theTopic = findBaseTopicName($theTopic);
 
     my $theLang = currentLanguage();
     
-    my $theTopic = Foswiki::Func::extractNameValuePair($params);
-    my $theWeb;
-    if ($theTopic =~ m/^([^.]+)\.([^.]+)/) {
-        # topic="Web.MyTopic"
-        $theWeb = $1;
-        $theTopic = $2;
-    } else {
-        $theWeb = $web;
-    }
-    $theTopic = findBaseTopicName($theTopic);
-
     if ($theLang ne $defaultLanguage) {
         $theTopic .= normalizeLanguageName($theLang);
     }
 
-    # undef is ok, meaning current revision:
-    my $theRev = Foswiki::Func::extractNameValuePair($params, "rev");
+    my $theRev = $params->{rev};
 
     my $args = "\"$theWeb.$theTopic\"";
     $args .= " rev=\"$theRev\"" if $theRev;
@@ -256,14 +201,24 @@ sub handleIncludeTranslation {
 # finds the best suitable translation to the current topic (or, alternatively,
 # to the topic passsed as the first parameter)
 sub findBestTranslation {
-    my $theTopic = shift || $topic;
+    my $theTopic = shift || $baseTopic;
     my @alternatives = findAvailableTranslations($theTopic);
     my $best=$defaultLanguage;
+    my $redirectMethod = Foswiki::Func::getPreferencesValue("REDIRECTMETHOD") || "http";
     if ($redirectMethod eq "user"){
-        foreach $lang (@alternatives){
+        my $userLanguage = Foswiki::Func::getPreferencesValue("LANGUAGE") || "en";    
+        foreach my $lang (@alternatives){
             $best=$lang if $userLanguage eq $lang;
         }
     } else { # $redirectMethod is http or anything else
+        unless (defined $acceptor) {
+          require I18N::AcceptLanguage;
+          $acceptor = I18N::AcceptLanguage->new (
+              strict => 0,
+              defaultLanguage => $defaultLanguage
+          );
+        }
+
         $best=$acceptor->accepts($ENV{HTTP_ACCEPT_LANGUAGE}, \@alternatives);
     }
     return $best;
@@ -271,58 +226,67 @@ sub findBestTranslation {
 
 # check if a redirection is needed, possible, and do that if it's the case
 sub checkRedirection {
+
+    my $query = Foswiki::Func::getCgiQuery();
+    my $script = $query->action();
+    my $queryString = $query->queryString();
+
     # we only want to be redirected in view or viewauth, and when there is no
     # extra parameters to the request:
+    unless (($script =~ m/view(auth)?$/) and (! $queryString)) {
+      Foswiki::Func::writeDebug("TopicTranslationsPlugin - not redirecting: action != view or there's a query string") if DEBUG;
+      return;
+    }
 
-    # fake to '/view' if no script name (e.g. when using shorter URL's)
-    my $script = $ENV{SCRIPT_NAME} || '/view'; 
-
-    if (($script =~ m/\/view(auth)?$/) and (! $ENV{QUERY_STRING})) {
-        my $query = Foswiki::Func::getCgiQuery();
+    # don't redirect when called on the command line
+    return if $Foswiki::Plugins::SESSION->inContext('command_line');
     
-        # several checks
-        my $baseTopicName = findBaseTopicName();
-        my $baseUrl = Foswiki::Func::getViewUrl($web, $baseTopicName);
-        my $editUrl = Foswiki::Func::getScriptUrl($web, $baseTopicName, 'edit');
-        my $origin = $query->referer() || '';
-        my $originLanguage = currentLanguage($origin);
+    # several checks
+    my $baseTopicName = findBaseTopicName();
+    my $baseUrl = Foswiki::Func::getViewUrl($baseWeb, $baseTopicName);
+    my $editUrl = Foswiki::Func::getScriptUrl($baseWeb, $baseTopicName, 'edit');
+    my $origin = $query->referer() || '';
+    my $originLanguage = currentLanguage($origin);
 
-        my $current = currentLanguage();
+    my $current = currentLanguage();
+    Foswiki::Func::writeDebug("TopicTranslationsPlugin - origin=$origin, originLanguage=$originLanguage, current=$current");
 
-        # don't redirect if we came from another topic in the same language as
-        # the current one.
-        if ($origin && $originLanguage eq $current) {
-          return;
-        }
-        
-        # we don't want to redirect if the user came from another translation of
-        # this same topic, or from an edit
-        if ( (!($origin =~ /^$baseUrl/)) and (!($origin =~ /^$editUrl/))) {
+    # don't redirect if we came from another topic in the same language as
+    # the current one.
+    if ($origin && $originLanguage eq $current) {
+      Foswiki::Func::writeDebug("TopicTranslationsPlugin - not redirecting: originLanguage == current") if DEBUG;
+      return;
+    }
+    
+    # we don't want to redirect if the user came from another translation of
+    # this same topic, or from an edit
+    if ( (!($origin =~ /^$baseUrl/)) and (!($origin =~ /^$editUrl/))) {
 
-            # check where we are:
-            my $best = findBestTranslation(); # for the current topic, indeed
+        # check where we are:
+        my $best = findBestTranslation(); # for the current topic, indeed
+        Foswiki::Func::writeDebug("TopicTranslationsPlugin - best translation = $best") if DEBUG;
 
-            # we don't need to redirect if we are already in the best translation:
-            if (($current ne $best)) {
-              # actually do the redirect:
-              my $bestTranslationTopic = findBaseTopicName() . (($best eq $defaultLanguage)?'':(normalizeLanguageName($best)));
-              my $url = Foswiki::Func::getViewUrl($web,$bestTranslationTopic);
-              Foswiki::Func::redirectCgiQuery($query, $url);
-            }
+        # we don't need to redirect if we are already in the best translation:
+        if (($current ne $best)) {
+          # actually do the redirect:
+          my $bestTranslationTopic = findBaseTopicName() . (($best eq $defaultLanguage)?'':(normalizeLanguageName($best)));
+          my $url = Foswiki::Func::getViewUrl($baseWeb,$bestTranslationTopic);
+          Foswiki::Func::writeDebug("TopicTranslationsPlugin - redirecting to $url") if DEBUG; 
+          Foswiki::Func::redirectCgiQuery($query, $url);
         }
     }
 }
 
 # find the translations that already exist for the given topic, if any,
-# or for $topic, if no topic is informed.
+# or for $baseTopic, if no topic is informed.
 sub findAvailableTranslations {
-    return findTranslations(1, (shift || $topic));
+    return findTranslations(1, (shift || $baseTopic));
 }
 
 # find the translations that doesnt' exist yet for the given topic, if any, or
-# for $topic, if no topic is informed.
+# for $baseTopic, if no topic is informed.
 sub findMissingTranslations {
-    return findTranslations(0, (shift || $topic));
+    return findTranslations(0, (shift || $baseTopic));
 }
 
 # find translations that exists or are missing, depending on the first
@@ -332,18 +296,18 @@ sub findMissingTranslations {
 sub findTranslations {
     my $existance = shift;
 
-    $theTopic = shift || $topic;
+    my $theTopic = shift || $baseTopic;
     $theTopic = findBaseTopicName($theTopic);
 
     my ($norm, $exists);
     my @items;
 
-    foreach $lang (@translations) {
+    foreach my $lang (@translations) {
         # the suffix is empty in the case of the default language:
         $norm = ($lang eq $defaultLanguage)?(""):(normalizeLanguageName($lang));
         
         # is that translation available?
-        $exists = Foswiki::Func::topicExists($web, $theTopic . $norm);
+        $exists = Foswiki::Func::topicExists($baseWeb, $theTopic . $norm);
 
         # what kind (available or not) are we looking for?
         if (($existance and $exists) or ((!$existance) and (!$exists))) {
@@ -355,17 +319,13 @@ sub findTranslations {
 }
 
 sub handleBaseTranslation {
-    my $params = shift;
-    my $myTopic = Foswiki::Func::extractNameValuePair($params, "topic") || $topic;
-    return findBaseTopicName($myTopic);
+    my ($session, $params, $topic, $web) = @_;
+
+    my $theTopic = $params->{_DEFAULT} || $params->{topic} || $topic;
+    return findBaseTopicName($theTopic);
 }
 
 
-sub handleTranslateMessage {
-  my $params = shift;
-  my $lang = currentLanguage();
-  return (Foswiki::Func::extractNameValuePair($params, $lang));
-}
 
 # =========================
 
