@@ -219,7 +219,8 @@ sub findBestTranslation {
       );
     }
 
-    $best = $acceptor->accepts($ENV{HTTP_ACCEPT_LANGUAGE}, \@alternatives);
+    my $acceptLanguage = Foswiki::Func::getCgiQuery()->header("Accept-Language");
+    $best = $acceptor->accepts($acceptLanguage, \@alternatives);
   }
   return $best;
 }
@@ -233,7 +234,7 @@ sub checkRedirection {
 
   # we only want to be redirected in view or viewauth, and when there is no
   # extra parameters to the request:
-  unless (($script =~ m/view(auth)?$/) and (!$queryString)) {
+  if ($script !~ m/view(auth)?$/ or $queryString) {
     Foswiki::Func::writeDebug("TopicTranslationsPlugin - not redirecting: action != view or there's a query string") if DEBUG;
     return;
   }
@@ -249,25 +250,25 @@ sub checkRedirection {
   my $originLanguage = currentLanguage($origin);
 
   my $current = currentLanguage();
-  Foswiki::Func::writeDebug("TopicTranslationsPlugin - origin=$origin, originLanguage=$originLanguage, current=$current");
+  Foswiki::Func::writeDebug("TopicTranslationsPlugin - origin=$origin, originLanguage=$originLanguage, current=$current, baseUrl=$baseUrl") if DEBUG;
 
   # don't redirect if we came from another topic in the same language as
   # the current one.
   if ($origin && $originLanguage eq $current) {
-    Foswiki::Func::writeDebug("TopicTranslationsPlugin - not redirecting: originLanguage == current") if DEBUG;
+    Foswiki::Func::writeDebug("TopicTranslationsPlugin - not redirecting: coming from a topic in the same language") if DEBUG;
     return;
   }
 
   # we don't want to redirect if the user came from another translation of
   # this same topic, or from an edit
-  if ((!($origin =~ /^$baseUrl/)) and (!($origin =~ /^$editUrl/))) {
+  if (!($origin =~ /^$baseUrl/) && !($origin =~ /^$editUrl/)) {
 
     # check where we are:
     my $best = findBestTranslation();    # for the current topic, indeed
     Foswiki::Func::writeDebug("TopicTranslationsPlugin - best translation = $best") if DEBUG;
 
     # we don't need to redirect if we are already in the best translation:
-    if (($current ne $best)) {
+    if ($current ne $best) {
       # actually do the redirect:
       my $bestTranslationTopic = findBaseTopicName() . (($best eq $defaultLanguage) ? '' : (normalizeLanguageName($best)));
       my $url = Foswiki::Func::getViewUrl($baseWeb, $bestTranslationTopic);
